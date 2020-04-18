@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% with config=settings.PLUGINS_CONFIG.netbox_paloalto %}
+<h2 class="text-center" style="margin-top: 200px">
+	Showing firewall rules involving <strong>{{ name }}</strong>
+</h2>
+{% for fw in output %}
+	<div class="panel panel-default">
+			    <div class="panel-heading">
+				    <strong>Firewall rules on firewall {{ fw.hostname }} ({{ fw.found_rules|length }}/{{ fw.total_rules }} rules)<br /></strong>
+				    Searching for rules containing one of these address objects/address group objects: <i>{{ fw.search_term|join:", " }}</i>
+			    </div>
+			    <table id="rules_table" class="table table-hover table-headings panel-body component-list">
+				<thead>
+				    <tr>
+					<th>Name</th>
+					<th>Source zone</th>
+					<th>Source</th>
+					<th>Destination zone</th>
+					<th>Destination</th>
+					<th>Service</th>
+					<th>Application</th>
+					<th>Description</th>
+					<th></th>
+				    </tr>
+				</thead>
+				<tbody>
+	{% for rule in fw.found_rules %}
+	<tr class="interface" id="rules_detail">
+		<td>{{ rule.name }}</td>
+		<td>{{ rule.fromzone|join:", " }}</td>
+		<td>{{ rule.source|join:", " }}</td>
+		<td>{{ rule.tozone|join:", " }}</td>
+		<td>{{ rule.destination|join:", " }}</td>
+		<td>{{ rule.service|join:", " }}</td>
+		<td>{{ rule.application|join:", <br />" }}</td>
+		<td>{{ rule.description }}</td>
+	</tr>
+	{% endfor %}
+				</tbody>
+			    </table>
+	</div>
+{% endfor %}
+{% endwith %}
+{% endblock %}
