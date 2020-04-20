@@ -28,9 +28,7 @@ class FirewallRulesView(View):
                 search_term = []
                 search_term.append(name)
                 
-                print(all_objects)
                 for obj in all_objects:
-                    print(obj.static_value)
                     if name in obj.static_value:
                         search_term.append(obj.name)
 
