@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import View
+from dcim.models import Device
+from virtualization.models import VirtualMachine
 from .models import FirewallConfig
 
 class FirewallRulesView(View):
@@ -8,6 +10,18 @@ class FirewallRulesView(View):
     """
     def get(self, request, name = None):
         if name:
+            # Check if we have a valid Device og VirtualMachine object
+            try:
+                device = Device.objects.get(name=name)
+            except Device.DoesNotExist as e:
+                error = str(e)
+                try:
+                    vm = VirtualMachine.objects.get(name=name)
+                except VirtualMachine.DoesNotExist as e:
+                    error += " "
+                    error += str(e)
+                    return render(request, 'netbox_paloalto/rules.html', {'name' : name, 'error' : error})
+
             # Find all firewall rules
             import pandevice
             import pandevice.firewall

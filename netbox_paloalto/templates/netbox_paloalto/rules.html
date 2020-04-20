@@ -2,6 +2,26 @@
 
 {% block content %}
 {% with config=settings.PLUGINS_CONFIG.netbox_paloalto %}
+{% if error %}
+<div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">
+                <div class="panel panel-danger" style="margin-top: 200px">
+		    <div class="panel-heading">
+			<strong>
+			    <i class="fa fa-warning"></i>
+			    Unable to find object {{ name }} in NetBox
+			</strong>
+                    </div>
+		    <div class="panel-body">
+			<pre>{{ error }}</pre>
+			Make sure the object exists in NetBox before trying again.
+		    </div>
+		    </div>
+	    </div>
+	</div>
+</div>
+{% else %}
 <h2 class="text-center" style="margin-top: 200px">
 	Showing firewall rules involving <strong>{{ name }}</strong>
 </h2>
@@ -42,5 +62,6 @@
 			    </table>
 	</div>
 {% endfor %}
+{% endif %}
 {% endwith %}
 {% endblock %}
