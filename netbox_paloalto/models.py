@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class FirewallConfig(models.Model):
     """
     Holds configuration about Palo Alto firewall objects.

@@ -4,11 +4,12 @@ from dcim.models import Device
 from virtualization.models import VirtualMachine
 from .models import FirewallConfig
 
+
 class FirewallRulesView(View):
     """
     Display the firewall rules related to the object
     """
-    def get(self, request, name = None):
+    def get(self, request, name=None):
         if name:
             # Check if we have a valid Device og VirtualMachine object
             try:
@@ -22,10 +23,11 @@ class FirewallRulesView(View):
                     error += str(e)
                     error_heading = 'Unable to find object {} in NetBox'.format(name)
                     error_body = 'Make sure the object exists in Netbox before trying again'
-                    
-                    return render(request, 'netbox_paloalto/rules.html', {'name' : name, 
-                        'error' : error, 
-                        'error_heading': error_heading, 
+
+                    return render(request, 'netbox_paloalto/rules.html', {
+                        'name': name,
+                        'error': error,
+                        'error_heading': error_heading,
                         'error_body': error_body})
 
             # Find all firewall rules
@@ -50,15 +52,16 @@ class FirewallRulesView(View):
                     error_heading = 'Unable to connect properly to the firewall'
                     error = str(e)
                     error_body = 'Verify the hostname and API key of the firewall and try again.'
-                    
-                    return render(request, 'netbox_paloalto/rules.html', {'name' : name, 
-                        'error' : error, 
-                        'error_heading': error_heading, 
+
+                    return render(request, 'netbox_paloalto/rules.html', {
+                        'name': name,
+                        'error': error,
+                        'error_heading': error_heading,
                         'error_body': error_body})
 
                 search_term = []
                 search_term.append(name)
-                
+
                 for obj in all_objects:
                     if name in obj.static_value:
                         search_term.append(obj.name)
@@ -83,5 +86,5 @@ class FirewallRulesView(View):
 
         return render(request, 'netbox_paloalto/rules.html', {
             'output': output,
-            'name' : name
+            'name': name
         })
