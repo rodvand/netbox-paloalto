@@ -10,12 +10,12 @@
 		    <div class="panel-heading">
 			<strong>
 			    <i class="fa fa-warning"></i>
-			    Unable to find object {{ name }} in NetBox
+			    {{ error_heading }}
 			</strong>
                     </div>
 		    <div class="panel-body">
 			<pre>{{ error }}</pre>
-			Make sure the object exists in NetBox before trying again.
+			{{ error_body }}
 		    </div>
 		    </div>
 	    </div>

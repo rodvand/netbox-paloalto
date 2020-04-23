@@ -20,7 +20,13 @@ class FirewallRulesView(View):
                 except VirtualMachine.DoesNotExist as e:
                     error += " "
                     error += str(e)
-                    return render(request, 'netbox_paloalto/rules.html', {'name' : name, 'error' : error})
+                    error_heading = 'Unable to find object {} in NetBox'.format(name)
+                    error_body = 'Make sure the object exists in Netbox before trying again'
+                    
+                    return render(request, 'netbox_paloalto/rules.html', {'name' : name, 
+                        'error' : error, 
+                        'error_heading': error_heading, 
+                        'error_body': error_body})
 
             # Find all firewall rules
             import pandevice
@@ -36,9 +42,20 @@ class FirewallRulesView(View):
                 api_key = fw.api_key
 
                 fw_info = {}
-
                 fw = pandevice.firewall.Firewall(hostname, api_key=api_key)
-                all_objects = pandevice.objects.AddressGroup.refreshall(fw)
+
+                try:
+                    all_objects = pandevice.objects.AddressGroup.refreshall(fw)
+                except pandevice.errors.PanURLError as e:
+                    error_heading = 'Unable to connect properly to the firewall'
+                    error = str(e)
+                    error_body = 'Verify the hostname and API key of the firewall and try again.'
+                    
+                    return render(request, 'netbox_paloalto/rules.html', {'name' : name, 
+                        'error' : error, 
+                        'error_heading': error_heading, 
+                        'error_body': error_body})
+
                 search_term = []
                 search_term.append(name)
                 
