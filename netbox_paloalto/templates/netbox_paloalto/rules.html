@@ -26,11 +26,24 @@
 	Showing firewall rules involving <strong>{{ name }}</strong>
 </h2>
 {% for fw in output %}
+	{% if fw.total_rules > 0 %}
 	<div class="panel panel-default">
+			{% if fw.panorama %}
 			    <div class="panel-heading">
-				    <strong>Firewall rules on firewall {{ fw.hostname }} ({{ fw.found_rules|length }}/{{ fw.total_rules }} rules)<br /></strong>
+				    <strong>Panorama {{ fw.hostname }} 
+					    - device group {{ fw.device_group }} 
+					    - ({{ fw.found_rules|length }}/{{ fw.total_rules }})</strong><br />
 				    Searching for rules containing one of these address objects/address group objects: <i>{{ fw.search_term|join:", " }}</i>
 			    </div>
+			{% else %}
+			    <div class="panel-heading">
+				    <strong>Firewall rules on firewall {{ fw.hostname }} 
+					    ({{ fw.found_rules|length }}/{{ fw.total_rules }} rules)<br /></strong>
+				    Searching for rules containing one of these address objects/address group objects: <i>{{ fw.search_term|join:", " }}</i>
+			    </div>
+			{% endif %}
+
+			{% if fw.found_rules|length > 0 %}
 			    <table id="rules_table" class="table table-hover table-headings panel-body component-list">
 				<thead>
 				    <tr>
@@ -46,21 +59,27 @@
 				    </tr>
 				</thead>
 				<tbody>
-	{% for rule in fw.found_rules %}
-	<tr class="interface" id="rules_detail">
-		<td>{{ rule.name }}</td>
-		<td>{{ rule.fromzone|join:", " }}</td>
-		<td>{{ rule.source|join:", " }}</td>
-		<td>{{ rule.tozone|join:", " }}</td>
-		<td>{{ rule.destination|join:", " }}</td>
-		<td>{{ rule.service|join:", " }}</td>
-		<td>{{ rule.application|join:", <br />" }}</td>
-		<td>{{ rule.description }}</td>
-	</tr>
-	{% endfor %}
+					{% for rule in fw.found_rules %}
+					<tr class="interface" id="rules_detail">
+						<td>{{ rule.name }}</td>
+						<td>{{ rule.fromzone|join:", " }}</td>
+						<td>{{ rule.source|join:", " }}</td>
+						<td>{{ rule.tozone|join:", " }}</td>
+						<td>{{ rule.destination|join:", " }}</td>
+						<td>{{ rule.service|join:", " }}</td>
+						<td>{{ rule.application|join:", <br />" }}</td>
+						<td>{{ rule.description }}</td>
+					</tr>
+					{% endfor %}
 				</tbody>
 			    </table>
+			    {% else %}
+			    <div class="panel-body">
+				<p>No matching rules found.</p>
+			    </div>
+			    {% endif %}
 	</div>
+	{% endif %}
 {% endfor %}
 {% endif %}
 {% endwith %}

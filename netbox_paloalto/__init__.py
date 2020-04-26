@@ -1,4 +1,9 @@
-from extras.plugins import PluginConfig
+try:
+    from extras.plugins import PluginConfig
+except ImportError:
+    # Dummy for when importing outside of netbox
+    class PluginConfig:
+        pass
 
 VERSION = '0.1'
 

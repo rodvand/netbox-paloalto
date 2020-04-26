@@ -33,6 +33,7 @@ class FirewallRulesView(View):
             # Find all firewall rules
             import pandevice
             import pandevice.firewall
+            import pandevice.panorama
             import pandevice.policies
             import pandevice.objects
 
@@ -42,47 +43,98 @@ class FirewallRulesView(View):
             for fw in fw_configs:
                 hostname = fw.hostname
                 api_key = fw.api_key
+                print(hostname)
 
-                fw_info = {}
-                fw = pandevice.firewall.Firewall(hostname, api_key=api_key)
+                if fw.panorama:
+                    # Dealing with Panorama
+                    pano = pandevice.panorama.Panorama(hostname, api_key=api_key)
+                    try:
+                        dg = pandevice.panorama.DeviceGroup.refreshall(pano)
+                    except Exception as e:
+                        print(e)
+                else:
+                    fw = pandevice.firewall.Firewall(hostname, api_key=api_key)
+                
+                if fw.panorama:
+                    for group in dg:
+                        print(group)
+                        fw_info = {}
+                        all_objects = pandevice.objects.AddressGroup.refreshall(group)
+                        search_term = []
+                        search_term.append(name)
 
-                try:
-                    all_objects = pandevice.objects.AddressGroup.refreshall(fw)
-                except pandevice.errors.PanURLError as e:
-                    error_heading = 'Unable to connect properly to the firewall'
-                    error = str(e)
-                    error_body = 'Verify the hostname and API key of the firewall and try again.'
+                        for obj in all_objects:
+                            if obj.static_value and name in obj.static_value:
+                                search_term.append(obj.name)
 
-                    return render(request, 'netbox_paloalto/rules.html', {
-                        'name': name,
-                        'error': error,
-                        'error_heading': error_heading,
-                        'error_body': error_body})
+                        print(search_term)
 
-                search_term = []
-                search_term.append(name)
+                        pre = pandevice.policies.PreRulebase()
+                        post = pandevice.policies.PostRulebase()
+                        group.add(pre)
+                        group.add(post)
 
-                for obj in all_objects:
-                    if name in obj.static_value:
-                        search_term.append(obj.name)
+                        rules = pandevice.policies.SecurityRule.refreshall(pre)
+                        rules += pandevice.policies.SecurityRule.refreshall(post)
+                        print(rules)
 
-                rulebase = pandevice.policies.Rulebase()
+                        found_rules = []
+                        for rule in rules:
+                            for search in search_term:
+                                print(rule, search)
+                                if search in rule.source or search in rule.destination:
+                                    found_rules.append(rule)
 
-                fw.add(rulebase)
+                        print("Found:")
+                        print(found_rules)
+                        fw_info['search_term'] = search_term
+                        fw_info['panorama'] = True
+                        fw_info['hostname'] = hostname
+                        fw_info['device_group'] = group.name
+                        fw_info['found_rules'] = found_rules
+                        fw_info['total_rules'] = len(rules)
+                        output.append(fw_info)
+                else:
+                    fw_info = {}
+                    try:
+                        all_objects = pandevice.objects.AddressGroup.refreshall(fw)
+                    except pandevice.errors.PanURLError as e:
+                        error_heading = 'Unable to connect properly to the firewall'
+                        error = str(e)
+                        error_body = 'Verify the hostname and API key of the firewall and try again.'
 
-                sec_rules = pandevice.policies.SecurityRule.refreshall(rulebase)
-                rules = []
-                for rule in sec_rules:
-                    for search in search_term:
-                        if search in rule.source or search in rule.destination:
-                            rules.append(rule)
+                        return render(request, 'netbox_paloalto/rules.html', {
+                            'name': name,
+                            'error': error,
+                            'error_heading': error_heading,
+                            'error_body': error_body})
 
-                fw_info['search_term'] = search_term
-                fw_info['hostname'] = hostname
-                fw_info['found_rules'] = rules
-                fw_info['total_rules'] = len(sec_rules)
+                    search_term = []
+                    search_term.append(name)
 
-                output.append(fw_info)
+                    for obj in all_objects:
+                        if name in obj.static_value:
+                            search_term.append(obj.name)
+
+                    rulebase = pandevice.policies.Rulebase()
+
+                    fw.add(rulebase)
+
+                    sec_rules = pandevice.policies.SecurityRule.refreshall(rulebase)
+                    rules = []
+                    for rule in sec_rules:
+                        for search in search_term:
+                            if search in rule.source or search in rule.destination:
+                                rules.append(rule)
+
+                    fw_info['search_term'] = search_term
+                    fw_info['panorama'] = False
+                    fw_info['hostname'] = hostname
+                    fw_info['device_group'] = None
+                    fw_info['found_rules'] = rules
+                    fw_info['total_rules'] = len(sec_rules)
+
+                    output.append(fw_info)
 
         return render(request, 'netbox_paloalto/rules.html', {
             'output': output,
