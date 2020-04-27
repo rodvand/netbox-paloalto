@@ -3,17 +3,25 @@ from django.views.generic import View
 from dcim.models import Device
 from virtualization.models import VirtualMachine
 from .models import FirewallConfig
-
+from netbox_paloalto import config
 
 class FirewallRulesView(View):
-    @staticmethod
-    def return_search_terms(all_objects, name):
+    def return_search_terms(self, all_objects, obj):
         search_list = []
+        if config.default_settings['transform']:
+            # Transform from Server01 to Server01.11.12
+            # Server01.2octet.3octet
+            ip = str(obj.primary_ip4.address.ip)
+            last_octets = ".".join(ip.split('.')[2:4])
+            name = "{}.{}".format(obj.name, last_octets)
+        else:
+            name = obj.name
+        
         search_list.append(name)
 
-        for obj in all_objects:
-            if obj.static_value and name in obj.static_value:
-                search_list.append(obj.name)
+        for one in all_objects:
+            if one.static_value and name in one.static_value:
+                search_list.append(one.name)
 
         return search_list
 
@@ -32,13 +40,14 @@ class FirewallRulesView(View):
     """
     def get(self, request, name=None):
         if name:
+            print(config.default_settings)
             # Check if we have a valid Device og VirtualMachine object
             try:
-                device = Device.objects.get(name=name)
+                obj = Device.objects.get(name=name)
             except Device.DoesNotExist as e:
                 error = str(e)
                 try:
-                    vm = VirtualMachine.objects.get(name=name)
+                    obj = VirtualMachine.objects.get(name=name)
                 except VirtualMachine.DoesNotExist as e:
                     error += " "
                     error += str(e)
@@ -76,7 +85,7 @@ class FirewallRulesView(View):
                     for group in dg:
                         fw_info = {}
                         all_objects = pandevice.objects.AddressGroup.refreshall(group)
-                        search_term = self.return_search_terms(all_objects, name)
+                        search_term = self.return_search_terms(all_objects, obj)
 
                         pre = pandevice.policies.PreRulebase()
                         post = pandevice.policies.PostRulebase()
@@ -110,7 +119,7 @@ class FirewallRulesView(View):
                             'error_heading': error_heading,
                             'error_body': error_body})
 
-                    search_term = self.return_search_terms(all_objects, name)
+                    search_term = self.return_search_terms(all_objects, obj)
 
                     rulebase = pandevice.policies.Rulebase()
                     firew.add(rulebase)
@@ -120,7 +129,7 @@ class FirewallRulesView(View):
 
                     fw_info['search_term'] = search_term
                     fw_info['panorama'] = fw.panorama
-                    fw_info['hostname'] = hostname
+                    fw_info['hostname'] = fw.hostname
                     fw_info['device_group'] = None
                     fw_info['found_rules'] = rules
                     fw_info['total_rules'] = len(sec_rules)
