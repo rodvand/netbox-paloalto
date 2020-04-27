@@ -6,6 +6,27 @@ from .models import FirewallConfig
 
 
 class FirewallRulesView(View):
+    @staticmethod
+    def return_search_terms(all_objects, name):
+        search_list = []
+        search_list.append(name)
+
+        for obj in all_objects:
+            if obj.static_value and name in obj.static_value:
+                search_list.append(obj.name)
+
+        return search_list
+
+    @staticmethod
+    def find_matching_rules(search_rules, search_terms):
+        found_rules = []
+        for rule in search_rules:
+            for search in search_terms:
+                if search in rule.source or search in rule.destination:
+                    found_rules.append(rule)
+
+        return found_rules
+
     """
     Display the firewall rules related to the object
     """
@@ -41,33 +62,21 @@ class FirewallRulesView(View):
             output = []
 
             for fw in fw_configs:
-                hostname = fw.hostname
-                api_key = fw.api_key
-                print(hostname)
-
                 if fw.panorama:
                     # Dealing with Panorama
-                    pano = pandevice.panorama.Panorama(hostname, api_key=api_key)
+                    pano = pandevice.panorama.Panorama(fw.hostname, api_key=fw.api_key)
                     try:
                         dg = pandevice.panorama.DeviceGroup.refreshall(pano)
                     except Exception as e:
                         print(e)
                 else:
-                    fw = pandevice.firewall.Firewall(hostname, api_key=api_key)
-                
+                    firew = pandevice.firewall.Firewall(fw.hostname, api_key=fw.api_key)
+
                 if fw.panorama:
                     for group in dg:
-                        print(group)
                         fw_info = {}
                         all_objects = pandevice.objects.AddressGroup.refreshall(group)
-                        search_term = []
-                        search_term.append(name)
-
-                        for obj in all_objects:
-                            if obj.static_value and name in obj.static_value:
-                                search_term.append(obj.name)
-
-                        print(search_term)
+                        search_term = self.return_search_terms(all_objects, name)
 
                         pre = pandevice.policies.PreRulebase()
                         post = pandevice.policies.PostRulebase()
@@ -76,20 +85,12 @@ class FirewallRulesView(View):
 
                         rules = pandevice.policies.SecurityRule.refreshall(pre)
                         rules += pandevice.policies.SecurityRule.refreshall(post)
-                        print(rules)
 
-                        found_rules = []
-                        for rule in rules:
-                            for search in search_term:
-                                print(rule, search)
-                                if search in rule.source or search in rule.destination:
-                                    found_rules.append(rule)
+                        found_rules = self.find_matching_rules(rules, search_term)
 
-                        print("Found:")
-                        print(found_rules)
                         fw_info['search_term'] = search_term
-                        fw_info['panorama'] = True
-                        fw_info['hostname'] = hostname
+                        fw_info['panorama'] = fw.panorama
+                        fw_info['hostname'] = fw.hostname
                         fw_info['device_group'] = group.name
                         fw_info['found_rules'] = found_rules
                         fw_info['total_rules'] = len(rules)
@@ -97,7 +98,7 @@ class FirewallRulesView(View):
                 else:
                     fw_info = {}
                     try:
-                        all_objects = pandevice.objects.AddressGroup.refreshall(fw)
+                        all_objects = pandevice.objects.AddressGroup.refreshall(firew)
                     except pandevice.errors.PanURLError as e:
                         error_heading = 'Unable to connect properly to the firewall'
                         error = str(e)
@@ -109,26 +110,16 @@ class FirewallRulesView(View):
                             'error_heading': error_heading,
                             'error_body': error_body})
 
-                    search_term = []
-                    search_term.append(name)
-
-                    for obj in all_objects:
-                        if name in obj.static_value:
-                            search_term.append(obj.name)
+                    search_term = self.return_search_terms(all_objects, name)
 
                     rulebase = pandevice.policies.Rulebase()
-
-                    fw.add(rulebase)
-
+                    firew.add(rulebase)
                     sec_rules = pandevice.policies.SecurityRule.refreshall(rulebase)
-                    rules = []
-                    for rule in sec_rules:
-                        for search in search_term:
-                            if search in rule.source or search in rule.destination:
-                                rules.append(rule)
+
+                    rules = self.find_matching_rules(sec_rules, search_term)
 
                     fw_info['search_term'] = search_term
-                    fw_info['panorama'] = False
+                    fw_info['panorama'] = fw.panorama
                     fw_info['hostname'] = hostname
                     fw_info['device_group'] = None
                     fw_info['found_rules'] = rules

@@ -25,19 +25,37 @@
 <h2 class="text-center" style="margin-top: 200px">
 	Showing firewall rules involving <strong>{{ name }}</strong>
 </h2>
+<div class="panel panel-default">
+	<div class="panel-heading">
+		Firewalls/device groups
+	</div>
+	<div class="panel-body">
+	<ul>
+		{% for fw in output %}
+			{% if fw.total_rules > 0 %}
+				{% if fw.panorama %}
+					<li><a href="#{{ fw.hostname }}{{ fw.device_group }}">{{ fw.hostname }} - {{ fw.device_group }}</a></li>
+				{% else %}
+					<li><a href="#{{ fw.hostname }}">{{ fw.hostname }}</a></li>
+				{% endif %}
+			{% endif %}
+		{% endfor %}
+	</ul>
+	</div>
+</div>
 {% for fw in output %}
 	{% if fw.total_rules > 0 %}
 	<div class="panel panel-default">
 			{% if fw.panorama %}
 			    <div class="panel-heading">
-				    <strong>Panorama {{ fw.hostname }} 
+				    <a id="{{ fw.hostname }}{{ fw.device_group }}"></a><strong>Panorama {{ fw.hostname }} 
 					    - device group {{ fw.device_group }} 
-					    - ({{ fw.found_rules|length }}/{{ fw.total_rules }})</strong><br />
+					    - ({{ fw.found_rules|length }}/{{ fw.total_rules }} rules)</strong><br />
 				    Searching for rules containing one of these address objects/address group objects: <i>{{ fw.search_term|join:", " }}</i>
 			    </div>
 			{% else %}
 			    <div class="panel-heading">
-				    <strong>Firewall rules on firewall {{ fw.hostname }} 
+				    <a id="{{ fw.hostname }}"></a><strong>Firewall rules on firewall {{ fw.hostname }} 
 					    ({{ fw.found_rules|length }}/{{ fw.total_rules }} rules)<br /></strong>
 				    Searching for rules containing one of these address objects/address group objects: <i>{{ fw.search_term|join:", " }}</i>
 			    </div>
