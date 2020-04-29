@@ -5,7 +5,7 @@ except ImportError:
     class PluginConfig:
         pass
 
-VERSION = '0.2'
+VERSION = '0.2.1'
 
 
 class PaloaltoConfig(PluginConfig):
