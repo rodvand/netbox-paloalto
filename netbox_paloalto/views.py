@@ -4,25 +4,35 @@ from dcim.models import Device
 from virtualization.models import VirtualMachine
 from .models import FirewallConfig
 from netbox_paloalto import config
+import netbox.settings
 
 class FirewallRulesView(View):
     def return_search_terms(self, all_objects, obj):
         search_list = []
-        if config.default_settings['transform']:
-            # Transform from Server01 to Server01.11.12
-            # Server01.2octet.3octet
+        search_list.append(obj.name)
+        setting = netbox.settings.PLUGINS_CONFIG['netbox_paloalto']
+
+        if 'transform' in setting and setting['transform']:
             ip = str(obj.primary_ip4.address.ip)
             last_octets = ".".join(ip.split('.')[2:4])
             name = "{}.{}".format(obj.name, last_octets)
-        else:
-            name = obj.name
+            search_list.append(name)
         
-        search_list.append(name)
+        initial_list = search_list
 
         for one in all_objects:
-            if one.static_value and name in one.static_value:
-                search_list.append(one.name)
-
+            move_on = False
+            if not one.static_value:
+                continue
+            for member in one.static_value:
+                for name in initial_list:
+                    if member.lower() == name.lower():
+                        search_list.append(one.name)
+                        move_on = True
+                        break
+                if move_on:
+                    break
+                    
         return search_list
 
     @staticmethod
@@ -40,7 +50,6 @@ class FirewallRulesView(View):
     """
     def get(self, request, name=None):
         if name:
-            print(config.default_settings)
             # Check if we have a valid Device og VirtualMachine object
             try:
                 obj = Device.objects.get(name=name)

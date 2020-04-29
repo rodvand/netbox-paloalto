@@ -17,9 +17,7 @@ class PaloaltoConfig(PluginConfig):
     author_email = 'martin@rodvand.net'
     base_url = 'paloalto'
     required_settings = []
-    default_settings = {
-        'transform': False
-    }
+    default_settings = {}
     caching_config = {
         '*': None
     }
