@@ -6,6 +6,7 @@ from .models import FirewallConfig
 from netbox_paloalto import config
 import netbox.settings
 
+
 class FirewallRulesView(View):
     def return_search_terms(self, all_objects, obj):
         search_list = []
@@ -17,7 +18,7 @@ class FirewallRulesView(View):
             last_octets = ".".join(ip.split('.')[2:4])
             name = "{}.{}".format(obj.name, last_octets)
             search_list.append(name)
-        
+
         initial_list = search_list
 
         for one in all_objects:
@@ -32,7 +33,7 @@ class FirewallRulesView(View):
                         break
                 if move_on:
                     break
-                    
+
         return search_list
 
     @staticmethod
