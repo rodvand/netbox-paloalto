@@ -2,6 +2,9 @@
 
 This plugin enables you to list firewall rules defined on your Palo Alto Networks firewall or Panorama management server directly in Netbox. The URL `<NETBOX>/plugin/paloalto/<object>` will list all firewall rules associated with object (see limitations further down).
 
+## Preview
+![Plugin preview](docs/media/preview.png "Preview of the plugin")
+
 ## Compatibility
 Netbox 2.8 and higher.
 
