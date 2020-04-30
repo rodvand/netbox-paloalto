@@ -4,11 +4,27 @@
 
 {% block content %}
 {% with config=settings.PLUGINS_CONFIG.netbox_paloalto %}
+{% if not name %}
+<div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">
+                <div class="panel-body">
+                    <form action="" method="post">{% csrf_token %}
+                        <strong>Device/virtual machine</strong>
+                        <input name="name" id="name" type="text" />
+                        <input type="submit" value="Find rules!">
+                    </form>
+                </div>
+            </div>
+	    </div>
+	</div>
+</div>
+{% else %}
 {% if error %}
 <div class="container-fluid">
         <div class="row">
             <div class="col-md-6 col-md-offset-3">
-                <div class="panel panel-danger" style="margin-top: 200px">
+                <div class="panel panel-danger" style="margin-top: 100px">
 		    <div class="panel-heading">
 			<strong>
 			    <i class="fa fa-warning"></i>
@@ -25,7 +41,7 @@
 </div>
 {% else %}
 {% if output|length > 0 %}
-<h2 class="text-center" style="margin-top: 200px">
+<h2 class="text-center" style="margin-top: 100px">
 	Showing firewall rules involving <strong>{{ name }}</strong>
 </h2>
 <div class="panel panel-default">
@@ -124,6 +140,7 @@
 	    </div>
 	</div>
 </div>
+{% endif %}
 {% endif %}
 {% endif %}
 {% endwith %}

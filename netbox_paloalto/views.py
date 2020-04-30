@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import View
 from dcim.models import Device
 from virtualization.models import VirtualMachine
@@ -46,10 +46,19 @@ class FirewallRulesView(View):
 
         return found_rules
 
+    def post(self, request):
+        if request.POST:
+            name = request.POST.get('name')
+            return redirect('plugins:netbox_paloalto:firewall_rule', name=name)
+
+        return render(request, 'netbox_paloalto/rules.html')
+
     """
     Display the firewall rules related to the object
     """
     def get(self, request, name=None):
+        if not name:
+            return render(request, 'netbox_paloalto/rules.html')
         if name:
             # Check if we have a valid Device og VirtualMachine object
             try:
