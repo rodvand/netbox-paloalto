@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% block title %}{{ name }} - Palo Alto rules {% endblock %}
+
 {% block content %}
 {% with config=settings.PLUGINS_CONFIG.netbox_paloalto %}
 {% if error %}
@@ -22,6 +24,7 @@
 	</div>
 </div>
 {% else %}
+{% if output|length > 0 %}
 <h2 class="text-center" style="margin-top: 200px">
 	Showing firewall rules involving <strong>{{ name }}</strong>
 </h2>
@@ -99,6 +102,29 @@
 	</div>
 	{% endif %}
 {% endfor %}
+{% else %}
+<div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">
+                <div class="panel panel-info" style="margin-top: 200px">
+		    <div class="panel-heading">
+			<strong>
+				Unable to find any rules involving {{ name }}
+			</strong>
+                    </div>
+		    <div class="panel-body">
+			    <p>Remember the following constraints with this tool:
+			    <ul>
+				<li>Only one level of address group nesting is done</li>
+				<li>The search does not include subnets which may contain the object</li>
+				<li>Rules with 'any' is omitted</li>
+			    </ul>
+		    </div>
+		    </div>
+	    </div>
+	</div>
+</div>
+{% endif %}
 {% endif %}
 {% endwith %}
 {% endblock %}

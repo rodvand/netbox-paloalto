@@ -87,7 +87,15 @@ class FirewallRulesView(View):
                     try:
                         dg = pandevice.panorama.DeviceGroup.refreshall(pano)
                     except Exception as e:
-                        print(e)
+                        error = str(e)
+                        error_heading = 'Unable to establish connection with Panorama {}'.format(name)
+                        error_body = 'Check credentials/network connection before trying again.'
+
+                        return render(request, 'netbox_paloalto/rules.html', {
+                            'name': name,
+                            'error': error,
+                            'error_heading': error_heading,
+                            'error_body': error_body})
                 else:
                     firew = pandevice.firewall.Firewall(fw.hostname, api_key=fw.api_key)
 
@@ -113,7 +121,9 @@ class FirewallRulesView(View):
                         fw_info['device_group'] = group.name
                         fw_info['found_rules'] = found_rules
                         fw_info['total_rules'] = len(rules)
-                        output.append(fw_info)
+
+                        if len(found_rules) > 0:
+                            output.append(fw_info)
                 else:
                     fw_info = {}
                     try:
@@ -144,7 +154,8 @@ class FirewallRulesView(View):
                     fw_info['found_rules'] = rules
                     fw_info['total_rules'] = len(sec_rules)
 
-                    output.append(fw_info)
+                    if len(rules) > 0:
+                        output.append(fw_info)
 
         return render(request, 'netbox_paloalto/rules.html', {
             'output': output,
