@@ -13,15 +13,18 @@ NetBox 2.8 and higher.
 pip3 install netbox-paloalo
 ```
 
+Add `netbox_paloalto` to `configuration.py` like this:
+```
+PLUGINS = ['netbox_paloalto']
+```
 Add you firewall/Panorama (can have multiple) through the Admin GUI of NetBox.
 
 ### Required settings
-Assume a NetBox object with name Server01 and IP 1.2.3.4.
-
+Assume a NetBox object with name Server01 and IP 1.2.3.4.  
 Available settings in PLUGINS_CONFIG is:
 ```
 transform: True/False - Netbox object is transformed before the search in Panorama/firewall. 
-                        Additional search term will be Server01.3.4.
+                        Additional search term will be Server01.3.4. Default: False
 ```
 
 ## Generate your Palo Alto firewall API key
