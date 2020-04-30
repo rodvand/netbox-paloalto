@@ -9,14 +9,14 @@ This plugin enables you to list firewall rules defined on your Palo Alto Network
 NetBox 2.8 and higher.
 
 ## Installation
-```
-pip3 install netbox-paloalo
-```
+Add `netbox-paloalto` to your local_requirements.txt. 
 
 Add `netbox_paloalto` to `configuration.py` like this:
 ```
 PLUGINS = ['netbox_paloalto']
 ```
+Run `./upgrade.sh` which will download the package and run the necessary database migrations.
+
 Add you firewall/Panorama (can have multiple) through the Admin GUI of NetBox.
 
 ### Required settings
