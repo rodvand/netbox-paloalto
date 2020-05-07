@@ -8,6 +8,38 @@ import netbox.settings
 
 
 class FirewallRulesView(View):
+    def search_objects(self, all_objects, current_search, nest_level=1, previous=None):
+        if not previous:
+            search_list = current_search
+        else:
+            if previous == current_search:
+                search_list = current_search
+            else:
+                search_list = list(set(previous) - set(current_search))
+
+        for adr_object in all_objects:
+            move_on = False
+            if not adr_object.static_value:
+                continue
+            for member in adr_object.static_value:
+                for name in current_search:
+                    if member.lower() == name.lower():
+                        search_list.append(adr_object.name)
+                        move_on = True
+                        break
+                if move_on:
+                    break
+
+        setting = netbox.settings.PLUGINS_CONFIG['netbox_paloalto']
+        if nest_level < setting['nesting']:
+            nest_level += 1
+            return self.search_objects(all_objects, search_list, nest_level, current_search)
+
+        search_list.extend(current_search)
+        return search_list
+
+
+
     def return_search_terms(self, all_objects, obj):
         search_list = []
         search_list.append(obj.name)
@@ -19,22 +51,7 @@ class FirewallRulesView(View):
             name = "{}.{}".format(obj.name, last_octets)
             search_list.append(name)
 
-        initial_list = search_list
-
-        for one in all_objects:
-            move_on = False
-            if not one.static_value:
-                continue
-            for member in one.static_value:
-                for name in initial_list:
-                    if member.lower() == name.lower():
-                        search_list.append(one.name)
-                        move_on = True
-                        break
-                if move_on:
-                    break
-
-        return search_list
+        return self.search_objects(all_objects, search_list) 
 
     @staticmethod
     def find_matching_rules(search_rules, search_terms):
@@ -44,7 +61,7 @@ class FirewallRulesView(View):
                 if search in rule.source or search in rule.destination:
                     found_rules.append(rule)
 
-        return found_rules
+        return list(set(found_rules))
 
     def post(self, request):
         if request.POST:
@@ -109,10 +126,17 @@ class FirewallRulesView(View):
                     firew = pandevice.firewall.Firewall(fw.hostname, api_key=fw.api_key)
 
                 if fw.panorama:
+                    search_objects = []
                     for group in dg:
-                        fw_info = {}
                         all_objects = pandevice.objects.AddressGroup.refreshall(group)
                         search_term = self.return_search_terms(all_objects, obj)
+                        search_term = list(set(search_term))
+                        search_objects.extend(search_term)
+
+                    search_objects = list(set(search_objects))
+
+                    for group in dg:
+                        fw_info = {}
 
                         pre = pandevice.policies.PreRulebase()
                         post = pandevice.policies.PostRulebase()
@@ -122,9 +146,9 @@ class FirewallRulesView(View):
                         rules = pandevice.policies.SecurityRule.refreshall(pre)
                         rules += pandevice.policies.SecurityRule.refreshall(post)
 
-                        found_rules = self.find_matching_rules(rules, search_term)
+                        found_rules = self.find_matching_rules(rules, search_objects)
 
-                        fw_info['search_term'] = search_term
+                        fw_info['search_term'] = search_objects
                         fw_info['panorama'] = fw.panorama
                         fw_info['hostname'] = fw.hostname
                         fw_info['device_group'] = group.name
@@ -149,6 +173,7 @@ class FirewallRulesView(View):
                             'error_body': error_body})
 
                     search_term = self.return_search_terms(all_objects, obj)
+                    search_term = list(set(search_term))
 
                     rulebase = pandevice.policies.Rulebase()
                     firew.add(rulebase)
