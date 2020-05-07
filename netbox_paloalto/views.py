@@ -31,14 +31,12 @@ class FirewallRulesView(View):
                     break
 
         setting = netbox.settings.PLUGINS_CONFIG['netbox_paloalto']
-        if nest_level < setting['nesting']:
+        if 'netsing' in setting and nest_level < setting['nesting']:
             nest_level += 1
             return self.search_objects(all_objects, search_list, nest_level, current_search)
 
         search_list.extend(current_search)
         return search_list
-
-
 
     def return_search_terms(self, all_objects, obj):
         search_list = []
@@ -51,7 +49,7 @@ class FirewallRulesView(View):
             name = "{}.{}".format(obj.name, last_octets)
             search_list.append(name)
 
-        return self.search_objects(all_objects, search_list) 
+        return self.search_objects(all_objects, search_list)
 
     @staticmethod
     def find_matching_rules(search_rules, search_terms):
