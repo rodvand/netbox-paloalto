@@ -6,7 +6,8 @@ This plugin enables you to list firewall rules defined on your Palo Alto Network
 ![Plugin preview](docs/media/preview.png "Preview of the plugin")
 
 ## Compatibility
-NetBox 2.8 and higher.
+NetBox 2.8 and higher.  
+Tested on Panorama PAN-OS 9.1 and PA-220 PAN-OS 9.1.
 
 ## Installation
 Add `netbox-paloalto` to your local_requirements.txt. 
