@@ -1,3 +1,5 @@
+![PyPI](https://img.shields.io/pypi/v/netbox-paloalto)
+
 # Palo Alto Networks firewall/Panorama NetBox plugin
 
 This plugin enables you to list firewall rules defined on your Palo Alto Networks firewall or Panorama management server directly in NetBox. The URL `<NETBOX>/plugins/paloalto/<object>` will list all firewall rules associated with object (see limitations further down).
@@ -30,10 +32,10 @@ nesting: <int> - The number of levels of nesting within address groups to perfor
 ```
 
 ## Generate your Palo Alto firewall API key
-See [Palo Alto Networks documentation](https://docs.paloaltonetworks.com/pan-os/9-0/pan-os-panorama-api/get-started-with-the-pan-os-xml-api/get-your-api-key.html) on generating your API key.
+See [Palo Alto Networks documentation](https://docs.paloaltonetworks.com/pan-os/9-0/pan-os-panorama-api/get-started-with-the-pan-os-xml-api/get-your-api-key.html) on generating your API key. As this plugin is only reading the configuration a read-only user is recommended.
 
 ## Limitations
 * Limited nesting for address groups as default
-* Does not include "any" rules based on zones (as we can't tell the zone from the object name)
+* Does not include "any" rules based on zones (can't tell the zone from the object name)
 * Does not match with subnet rules (you can have a rule saying 10.0.0.0/8 is allowed, but your object with the address 10.1.1.1 is not listed)
 * Does currently not support other rule types than security rules (no NAT/Decryption/etc)
