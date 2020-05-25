@@ -4,4 +4,4 @@ from .models import FirewallConfig
 
 @admin.register(FirewallConfig)
 class FirewallConfigAdmin(admin.ModelAdmin):
-    list_display = ('hostname', 'api_key', 'panorama')
+    list_display = ("hostname", "api_key", "panorama")

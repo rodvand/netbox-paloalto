@@ -3,7 +3,6 @@ from django.views.generic import View
 from dcim.models import Device
 from virtualization.models import VirtualMachine
 from .models import FirewallConfig
-from netbox_paloalto import config
 import netbox.settings
 
 
@@ -30,10 +29,12 @@ class FirewallRulesView(View):
                 if move_on:
                     break
 
-        setting = netbox.settings.PLUGINS_CONFIG['netbox_paloalto']
-        if 'netsing' in setting and nest_level < setting['nesting']:
+        setting = netbox.settings.PLUGINS_CONFIG["netbox_paloalto"]
+        if "nesting" in setting and nest_level < setting["nesting"]:
             nest_level += 1
-            return self.search_objects(all_objects, search_list, nest_level, current_search)
+            return self.search_objects(
+                all_objects, search_list, nest_level, current_search
+            )
 
         search_list.extend(current_search)
         return search_list
@@ -41,11 +42,11 @@ class FirewallRulesView(View):
     def return_search_terms(self, all_objects, obj):
         search_list = []
         search_list.append(obj.name)
-        setting = netbox.settings.PLUGINS_CONFIG['netbox_paloalto']
+        setting = netbox.settings.PLUGINS_CONFIG["netbox_paloalto"]
 
-        if 'transform' in setting and setting['transform']:
+        if "transform" in setting and setting["transform"]:
             ip = str(obj.primary_ip4.address.ip)
-            last_octets = ".".join(ip.split('.')[2:4])
+            last_octets = ".".join(ip.split(".")[2:4])
             name = "{}.{}".format(obj.name, last_octets)
             search_list.append(name)
 
@@ -63,17 +64,18 @@ class FirewallRulesView(View):
 
     def post(self, request):
         if request.POST:
-            name = request.POST.get('name')
-            return redirect('plugins:netbox_paloalto:firewall_rule', name=name)
+            name = request.POST.get("name")
+            return redirect("plugins:netbox_paloalto:firewall_rule", name=name)
 
-        return render(request, 'netbox_paloalto/rules.html')
+        return render(request, "netbox_paloalto/rules.html")
 
     """
     Display the firewall rules related to the object
     """
+
     def get(self, request, name=None):
         if not name:
-            return render(request, 'netbox_paloalto/rules.html')
+            return render(request, "netbox_paloalto/rules.html")
         if name:
             # Check if we have a valid Device og VirtualMachine object
             try:
@@ -85,14 +87,21 @@ class FirewallRulesView(View):
                 except VirtualMachine.DoesNotExist as e:
                     error += " "
                     error += str(e)
-                    error_heading = 'Unable to find object {} in NetBox'.format(name)
-                    error_body = 'Make sure the object exists in Netbox before trying again'
+                    error_heading = "Unable to find object {} in NetBox".format(name)
+                    error_body = (
+                        "Make sure the object exists in Netbox before trying again"
+                    )
 
-                    return render(request, 'netbox_paloalto/rules.html', {
-                        'name': name,
-                        'error': error,
-                        'error_heading': error_heading,
-                        'error_body': error_body})
+                    return render(
+                        request,
+                        "netbox_paloalto/rules.html",
+                        {
+                            "name": name,
+                            "error": error,
+                            "error_heading": error_heading,
+                            "error_body": error_body,
+                        },
+                    )
 
             # Find all firewall rules
             import pandevice
@@ -112,14 +121,23 @@ class FirewallRulesView(View):
                         dg = pandevice.panorama.DeviceGroup.refreshall(pano)
                     except Exception as e:
                         error = str(e)
-                        error_heading = 'Unable to establish connection with Panorama {}'.format(name)
-                        error_body = 'Check credentials/network connection before trying again.'
+                        error_heading = "Unable to establish connection with Panorama {}".format(
+                            name
+                        )
+                        error_body = (
+                            "Check credentials/network connection before trying again."
+                        )
 
-                        return render(request, 'netbox_paloalto/rules.html', {
-                            'name': name,
-                            'error': error,
-                            'error_heading': error_heading,
-                            'error_body': error_body})
+                        return render(
+                            request,
+                            "netbox_paloalto/rules.html",
+                            {
+                                "name": name,
+                                "error": error,
+                                "error_heading": error_heading,
+                                "error_body": error_body,
+                            },
+                        )
                 else:
                     firew = pandevice.firewall.Firewall(fw.hostname, api_key=fw.api_key)
 
@@ -146,12 +164,12 @@ class FirewallRulesView(View):
 
                         found_rules = self.find_matching_rules(rules, search_objects)
 
-                        fw_info['search_term'] = search_objects
-                        fw_info['panorama'] = fw.panorama
-                        fw_info['hostname'] = fw.hostname
-                        fw_info['device_group'] = group.name
-                        fw_info['found_rules'] = found_rules
-                        fw_info['total_rules'] = len(rules)
+                        fw_info["search_term"] = search_objects
+                        fw_info["panorama"] = fw.panorama
+                        fw_info["hostname"] = fw.hostname
+                        fw_info["device_group"] = group.name
+                        fw_info["found_rules"] = found_rules
+                        fw_info["total_rules"] = len(rules)
 
                         if len(found_rules) > 0:
                             output.append(fw_info)
@@ -160,15 +178,20 @@ class FirewallRulesView(View):
                     try:
                         all_objects = pandevice.objects.AddressGroup.refreshall(firew)
                     except pandevice.errors.PanURLError as e:
-                        error_heading = 'Unable to connect properly to the firewall'
+                        error_heading = "Unable to connect properly to the firewall"
                         error = str(e)
-                        error_body = 'Verify the hostname and API key of the firewall and try again.'
+                        error_body = "Verify the hostname and API key of the firewall and try again."
 
-                        return render(request, 'netbox_paloalto/rules.html', {
-                            'name': name,
-                            'error': error,
-                            'error_heading': error_heading,
-                            'error_body': error_body})
+                        return render(
+                            request,
+                            "netbox_paloalto/rules.html",
+                            {
+                                "name": name,
+                                "error": error,
+                                "error_heading": error_heading,
+                                "error_body": error_body,
+                            },
+                        )
 
                     search_term = self.return_search_terms(all_objects, obj)
                     search_term = list(set(search_term))
@@ -179,17 +202,16 @@ class FirewallRulesView(View):
 
                     rules = self.find_matching_rules(sec_rules, search_term)
 
-                    fw_info['search_term'] = search_term
-                    fw_info['panorama'] = fw.panorama
-                    fw_info['hostname'] = fw.hostname
-                    fw_info['device_group'] = None
-                    fw_info['found_rules'] = rules
-                    fw_info['total_rules'] = len(sec_rules)
+                    fw_info["search_term"] = search_term
+                    fw_info["panorama"] = fw.panorama
+                    fw_info["hostname"] = fw.hostname
+                    fw_info["device_group"] = None
+                    fw_info["found_rules"] = rules
+                    fw_info["total_rules"] = len(sec_rules)
 
                     if len(rules) > 0:
                         output.append(fw_info)
 
-        return render(request, 'netbox_paloalto/rules.html', {
-            'output': output,
-            'name': name
-        })
+        return render(
+            request, "netbox_paloalto/rules.html", {"output": output, "name": name}
+        )
