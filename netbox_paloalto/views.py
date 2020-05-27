@@ -42,6 +42,7 @@ class FirewallRulesView(View):
     def return_search_terms(self, all_objects, obj):
         search_list = []
         search_list.append(obj.name)
+        search_list.append(str(obj.primary_ip.address.ip))
         setting = netbox.settings.PLUGINS_CONFIG["netbox_paloalto"]
 
         if "transform" in setting and setting["transform"]:
@@ -115,9 +116,7 @@ class FirewallRulesView(View):
             if len(fw_configs) == 0:
                 error = "No firewall configs found"
                 error_heading = "Unable to find any firewall configurations"
-                error_body = (
-                    "Make sure you have defined any firewalls/Panorama connections in the admin site."
-                )
+                error_body = "Make sure you have defined any firewalls/Panorama connections in the admin site."
 
                 return render(
                     request,
