@@ -111,6 +111,25 @@ class FirewallRulesView(View):
             import pandevice.objects
 
             fw_configs = FirewallConfig.objects.all()
+
+            if len(fw_configs) == 0:
+                error = "No firewall configs found"
+                error_heading = "Unable to find any firewall configurations"
+                error_body = (
+                    "Make sure you have defined any firewalls/Panorama connections in the admin site."
+                )
+
+                return render(
+                    request,
+                    "netbox_paloalto/rules.html",
+                    {
+                        "name": name,
+                        "error": error,
+                        "error_heading": error_heading,
+                        "error_body": error_body,
+                    },
+                )
+
             output = []
 
             for fw in fw_configs:
